@@ -13,7 +13,7 @@ def parse_args():
 	return parser.parse_args()
 
 ARGS = parse_args()
-PATH_NET_INTERFACES = '/etc/network/interfaces.test'
+PATH_NET_INTERFACES = '/etc/network/interfaces'
 PATH_DHCPCD_CONF = '/etc/dhcpcd.conf'
 PATH_DNSMASQ_CONF = '/etc/dnsmasp.conf'
 BACKUP_EXTENSION = '.backup'
@@ -62,7 +62,37 @@ def backup_network_interfaces():
 def recover_network_interfaces():
 	path_backup = get_backup_path(PATH_NET_INTERFACES)
 	if os.path.exists(path_backup) == False:
-		raise IOError('Cannot recover {0} to this original state, {1} does not exists.'.format(PATH_NET_INTERFACES, path_backup))
+		raise IOError('Cannot recover {0} to the original state, {1} does not exists.'.format(PATH_NET_INTERFACES, path_backup))
 	recover_file_backup(PATH_NET_INTERFACES)
 
-configurate_network_interfaces()
+def configurate_dhcpcd():
+	if os.path.exists(PATH_DHCPCD_CONF) == False:
+		raise IOError('The file {0} do not exists.'.format(PATH_DHCPCD_CONF))
+	if ARGS.no_backup == False:
+		backup_dhcpcd()
+	with open(PATH_DHCPCD_CONF, mode='a') as file:
+		print('\ndenyinterfaces eth0', file=file)
+
+def backup_dhcpcd():
+	make_file_backup(PATH_DHCPCD_CONF)
+
+def restore_dhcpcd():
+	path_backup = get_backup_path(PATH_DHCPCD_CONF)
+	if os.path.exists(path_backup) == False:
+		raise IOError('Cannot recover {0} to the original state, {1} does not exists.'.format(PATH_DHCPCD_CONF, path_backup))
+	recover_file_backup(PATH_DHCPCD_CONF)
+		
+def install_dnsmasq():
+	
+
+# CONFIGURATE NETWORK INTERFACES
+
+# CONFIGURATE DHCPCD
+
+# INSTALL DNSMASQ
+
+# CONFIGURATE DNSMASQ
+
+# SET IPV4 FORWARD
+
+# SET IPTABLES
