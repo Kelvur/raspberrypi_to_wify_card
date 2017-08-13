@@ -125,7 +125,6 @@ def restore_iptables():
 	subprocess.run(['iptables-restore', '<', PATH_IPTABLES_BACKUP], check=True)
 
 
-
 # CONFIGURATE NETWORK INTERFACES
 
 # CONFIGURATE DHCPCD
