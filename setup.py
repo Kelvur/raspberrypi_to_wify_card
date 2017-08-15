@@ -30,14 +30,14 @@ def check_if_exists(path):
 def get_backup_path(path):
 	return path + BACKUP_EXTENSION
 
-def make_file_backup(path):
+def make_backup_file(path):
 	shutil.copy2(path, get_backup_path(path))
 
-def recover_file_backup(path):
-	path_backup = get_backup_path(path)
-	if os.path.exists(path_backup) == False:
-		raise IOError('Cannot recover {0} to the original state, {1} does not exists.'.format(path, path_backup))
-	shutil.copy2(path_backup, path)
+def recover_backup_file(path):
+	backup_path = get_backup_path(path)
+	if os.path.exists(backup_path) == False:
+		raise IOError('Cannot recover {0} to the original state, {1} does not exists.'.format(path, backup_path))
+	shutil.copy2(backup_path, path)
 
 def replace_in_file(file_name, old_string, new_string):
 	replaced = False
@@ -62,10 +62,10 @@ def configurate_network_interfaces():
 
 
 def backup_network_interfaces():
-	make_file_backup(PATH_NET_INTERFACES)
+	make_backup_file(PATH_NET_INTERFACES)
 	
 def recover_network_interfaces():
-	recover_file_backup(PATH_NET_INTERFACES)
+	recover_backup_file(PATH_NET_INTERFACES)
 
 def configurate_dhcpcd():
 	check_if_exists(PATH_DHCPCD_CONF)
@@ -75,13 +75,13 @@ def configurate_dhcpcd():
 		print('\ndenyinterfaces eth0', file=file)
 
 def backup_dhcpcd():
-	make_file_backup(PATH_DHCPCD_CONF)
+	make_backup_file(PATH_DHCPCD_CONF)
 
 def restore_dhcpcd():
-	recover_file_backup(PATH_DHCPCD_CONF)
+	recover_backup_file(PATH_DHCPCD_CONF)
 		
 def install_dnsmasq():
-	subprocess.run(['apt-get', 'install', 'dnsmasq', '--yes'], check=True)
+	subprocess.check_call(['apt-get', 'install', 'dnsmasq', '--yes'])
 
 def configurate_dnsmasq():
 	check_if_exists(PATH_DNSMASQ_CONF)
@@ -91,10 +91,10 @@ def configurate_dnsmasq():
 		print('\ninterface=eth0\nlisten_address=172.24.1.1\nbind-interfaces\nserver=8.8.8.8\domain-needed\nbogus-priv\ndhcp-range=172.24.1.50,172.24.1.150,12h\n', file=file)
 
 def backup_dnsmasq():
-	make_file_backup(PATH_DNSMASQ_CONF)
+	make_backup_file(PATH_DNSMASQ_CONF)
 
 def restore_dhcpmasq():
-	recover_file_backup(PATH_DNSMASQ_CONF)
+	recover_backup_file(PATH_DNSMASQ_CONF)
 
 def configurate_sysctl():
 	check_if_exists(PATH_SYSCTL_CONF)
@@ -104,25 +104,25 @@ def configurate_sysctl():
 		raise IOError('The file {0} was modificated before.'.format(PATH_SYSTCL_CONF))
 
 def backup_sysctl():
-	make_file_backup(PATH_SYSCTL_CONF)
+	make_backup_file(PATH_SYSCTL_CONF)
 
 def restore_sysctl():
-	recover_file_backup(PATH_SYSCTL_CONF)
+	recover_backup_file(PATH_SYSCTL_CONF)
 
 def configurate_iptables():
 	if ARGS.no_backup == False:
 		backup_iptables()
-	subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', '-o', 'wlan0', '-j', 'MASQUERADE'], check=True)
-	subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan0', '-o', 'eth0', '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'], check=True)
-	subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'eth0', '-o', 'wlan0', '-j', 'ACCEPT'], check=True)
+	subprocess.check_call(['iptables', '-t', 'nat', '-A', 'POSTROUTING', '-o', 'wlan0', '-j', 'MASQUERADE'])
+	subprocess.check_call(['iptables', '-A', 'FORWARD', '-i', 'wlan0', '-o', 'eth0', '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'])
+	subprocess.check_call(['iptables', '-A', 'FORWARD', '-i', 'eth0', '-o', 'wlan0', '-j', 'ACCEPT'])
 	#Save configuration
-	subprocess.run(['iptables-save', '>', PATH_IPTABLES_CONF], check=True)
+	subprocess.check_call(['iptables-save', '>', PATH_IPTABLES_CONF])
 
 def backup_iptables():
-	subprocess.run(['iptables-save', '>', PATH_IPTABLES_BACKUP], check=True)
+	subprocess.check_call(['iptables-save', '>', PATH_IPTABLES_BACKUP])
 
 def restore_iptables():
-	subprocess.run(['iptables-restore', '<', PATH_IPTABLES_BACKUP], check=True)
+	subprocess.check_call(['iptables-restore', '<', PATH_IPTABLES_BACKUP])
 
 
 # CONFIGURATE NETWORK INTERFACES
