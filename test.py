@@ -18,8 +18,17 @@ def begin_test(path):
 def end_test(path):
 	subprocess.check_call(['rm', get_test_path(path)])
 
-#def compare_files(path, other_path):
+def compare_files(path, other_path):
+	with open('/dev/null', 'w') as dev_null:
+		return True if subprocess.call(['diff', '-q', path, other_path], stdout=dev_null) == 0 else False
+	return False
 
+def look_in_file_for(path, needle):
+	with open(path, 'r') as file:
+		for line in file:
+			if needle in line:
+				return True
+	return False
 
 class GeneralMethodsTestCase(unittest.TestCase):
 
@@ -34,6 +43,9 @@ class GeneralMethodsTestCase(unittest.TestCase):
 	def setUp_test_recover_backup_file(self):
 		with open(self.test_path, 'a') as file:
 			print('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ac ex odio.', file=file)
+
+	def setUp_test_replace_in_file(self, look_in_for):
+		setup.replace_in_file(self.test_path, 'haystack', look_in_for)
 
 	"""	TEST	"""
 
@@ -53,11 +65,20 @@ class GeneralMethodsTestCase(unittest.TestCase):
 	def test_recover_backup_file(self):
 		self.setUp_test_recover_backup_file()
 		setup.recover_backup_file(self.test_path)
-		#self.assertTrue(compare_files(self.test_path, setup.get_backup_file(self.test_path)))
+		self.assertTrue(compare_files(self.test_path, setup.get_backup_path(self.test_path)))
 		self.tearDown_test_recover_backup_file()
 
 	def test_recover_backup_file_fail(self):
 		self.assertRaises(IOError, setup.recover_backup_file, self.wrong_path)
+
+	def test_replace_in_file(self):
+		look_in_for = 'nee' + 'dle'
+		self.setUp_test_replace_in_file(look_in_for)
+		self.assertTrue(look_in_file_for(self.test_path, look_in_for))
+
+	def test_replace_in_file_fail(self):
+		look_in_for = 'Wa' + 'lly'
+		self.assertFalse(look_in_file_for(self.test_path, look_in_for))
 
 	"""	TEAR DOWN	"""
 

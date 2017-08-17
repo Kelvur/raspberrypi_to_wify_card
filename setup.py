@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+#CHANGE NAME TO WIFI DONGLE
+
 import argparse
 import os.path
 import shutil
