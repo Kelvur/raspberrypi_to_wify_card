@@ -13,6 +13,7 @@ def parse_args():
 	group.add_argument('-v', '--verbose', help="Display more info while the execution.", action='store_true')
 	group.add_argument('-q', '--quiet', help="No display any info while the execution.", action='store_true')
 	parser.add_argument('--no-backup', help="By default the script make backups of the files it will modificate, if you do not want this behaviour use this argument.", action='store_true')
+	parser.add_argument('--restore-backup', help="Restore all to the original state.", action='store_true')
 	return parser.parse_args()
 
 ARGS = parse_args()
@@ -24,6 +25,9 @@ PATH_IPTABLES = '/etc/iptables.ipv4.nat'
 PATH_IPTABLES_BACKUP = '/etc/iptables.ipv4.backup'
 PATH_RCLOCAL = '/etc/rc.local'
 BACKUP_EXTENSION = '.backup'
+
+ETH0_NET_INTERFACE = 'iface eth0 inet static\n\taddress 172.24.1.1\n\tnetmask 255.255.255.0\n\tnetwork 172.24.1.0\n\tbroadcast 172.24.1.255\n'
+
 
 def check_if_exists(path):
 	if os.path.exists(path) == False:
@@ -41,6 +45,9 @@ def recover_backup_file(path):
 		raise IOError('Cannot recover {0} to the original state, {1} does not exists.'.format(path, backup_path))
 	shutil.copy2(backup_path, path)
 
+def remove_backup_file(backup_path):
+	subprocess.check_call(['rm', backup_path])
+
 def replace_in_file(file_name, old_string, new_string):
 	replaced = False
 	buffer = ''
@@ -54,7 +61,7 @@ def replace_in_file(file_name, old_string, new_string):
 	with open(file_name, mode='w') as file:
 		print(buffer, file=file)
 	return replaced
-	
+
 def configurate_network_interfaces():
 	check_if_exists(PATH_NET_INTERFACES)
 	if ARGS.no_backup == False:
@@ -68,6 +75,9 @@ def backup_network_interfaces():
 	
 def recover_network_interfaces():
 	recover_backup_file(PATH_NET_INTERFACES)
+
+def remove_backup_network_interfaces():
+	remove_backup_file(get_backup_path(PATH_NET_INTERFACES))
 
 def configurate_dhcpcd():
 	check_if_exists(PATH_DHCPCD_CONF)
@@ -127,7 +137,13 @@ def restore_iptables():
 	subprocess.check_call(['iptables-restore', '<', PATH_IPTABLES_BACKUP])
 
 
+if __name__ == '__main__':
 # CONFIGURATE NETWORK INTERFACES
+	try:
+		configurate_network_interfaces()
+	except IOError:
+		if os.path.exists(get_backup_path(PATH_NET_INTERFACES)):
+			remove_backup_network_interfaces()
 
 # CONFIGURATE DHCPCD
 

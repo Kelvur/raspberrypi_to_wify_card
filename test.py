@@ -32,7 +32,7 @@ def look_in_file_for(path, needle):
 
 class GeneralMethodsTestCase(unittest.TestCase):
 
-	"""	SET UP	"""
+	"""	SET UP		"""
 
 	def setUp(self):
 		self.path = globals()['__file__']
@@ -47,7 +47,7 @@ class GeneralMethodsTestCase(unittest.TestCase):
 	def setUp_test_replace_in_file(self, look_in_for):
 		setup.replace_in_file(self.test_path, 'haystack', look_in_for)
 
-	"""	TEST	"""
+	"""	TEST		"""
 
 	def test_check_if_exists_return_none(self):
 		self.assertIsNone(setup.check_if_exists(self.path))
@@ -70,6 +70,10 @@ class GeneralMethodsTestCase(unittest.TestCase):
 
 	def test_recover_backup_file_fail(self):
 		self.assertRaises(IOError, setup.recover_backup_file, self.wrong_path)
+	
+	def test_remove_backup_file(self):
+		setup.make_backup_file(self.test_path)
+		self.assertIsNone(setup.remove_backup_file(setup.get_backup_path(self.test_path)))
 
 	def test_replace_in_file(self):
 		look_in_for = 'nee' + 'dle'
@@ -79,14 +83,41 @@ class GeneralMethodsTestCase(unittest.TestCase):
 	def test_replace_in_file_fail(self):
 		look_in_for = 'Wa' + 'lly'
 		self.assertFalse(look_in_file_for(self.test_path, look_in_for))
-
+	
 	"""	TEAR DOWN	"""
 
 	def tearDown_test_recover_backup_file(self):
-		subprocess.check_call(['rm', setup.get_backup_path(self.test_path)])
+		setup.remove_backup_file(setup.get_backup_path(self.test_path))
 
 	def tearDown(self):
 		end_test(self.path)
+
+
+class NetworkInterfacesTestCase(unittest.TestCase):
+	
+	"""	SET UP		"""
+	
+	@classmethod
+	def setUpClass(cls):
+		cls.original_path = setup.PATH_NET_INTERFACES
+		setup.PATH_NET_INTERFACES = get_test_path(setup.PATH_NET_INTERFACES)
+
+	def setUp(self):
+		begin_test(self.original_path)
+
+	"""	TESTS		"""
+
+	def test_configure_network_interfaces(self):
+		self.assertIsNone(setup.configurate_network_interfaces())
+
+	"""	TEAR DOWN	"""
+	
+	@classmethod
+	def tearDownClass(cls):
+		setup.PATH_NET_INTERFACES = cls.original_path
+	
+	def tearDown(self):
+		end_test(self.original_path)
 
 
 if __name__ == '__main__':
